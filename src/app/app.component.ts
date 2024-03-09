@@ -16,40 +16,43 @@ declare global {
 export class AppComponent {
   
   recognition: any;
-  speechResult: string = '';
+  speechResult: string = "";
 
   constructor(
     private cdr: ChangeDetectorRef
     ) {}
 
-  ngOnInit() {
-    // Initialize speech recognition
-    this.recognition = new (window["webkitSpeechRecognition"] || window["SpeechRecognition"])();
-    this.recognition.continuous = true; // Enable continuous recognition
-    this.recognition.lang = 'en-US'; // Set recognition language
+  ngOnInit(): void {
+    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+      this.recognition = new (window["SpeechRecognition"] || window["webkitSpeechRecognition"])();
+      this.recognition.continuous = true; 
+      this.recognition.lang = "en-US"; 
 
-    // Event listeners
-    this.recognition.onresult = (event: any) => {
-      // Use type assertion to specify the type of event.results
-      const transcript = (event.results[event.results.length - 1])[0].transcript;
-      this.speechResult += transcript;
-    };
+      this.recognition.onresult = (event: any) => {
+        const resultIndex = event.results.length - 1;
+        this.speechResult += event.results[resultIndex][0].transcript;
+      };
 
-    this.recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-
-      // Handle audio-capture error
-      if (event.error === 'audio-capture') {
-        // alert('Please ensure that your microphone is connected and accessible.');
-      }
-    };
+      this.recognition.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+      };
+    } else {
+      console.error("SpeechRecognition API not supported in this browser.");
+    }
   }
 
-  startRecording() {
+  startRecording(): void {
+    console.log("Starting Recording!!!")
     this.recognition.start();
   }
 
-  stopRecording() {
+  stopRecording(): void {
+    console.log("Stopping Recording!!!")
     this.recognition.stop();
+  }
+
+  clearResult(): void {
+    this.speechResult = "";
+    this.cdr.detectChanges();
   }
 }
