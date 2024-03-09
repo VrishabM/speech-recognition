@@ -8,44 +8,36 @@ declare var annyang: any;
   styleUrls: ["./app.component.less"]
 })
 export class AppComponent {
-  capturedText: string = '';
-  private isRecording: boolean = false;
+  
+  recognition: any;
+  speechResult: string = '';
 
   constructor(
-    private ngZone: NgZone,
     private cdr: ChangeDetectorRef
     ) {}
 
   ngOnInit() {
-    if (annyang) {
-      annyang.debug();
-      annyang.addCommands({
-        'result': (phrases: string[]) => {
-          this.ngZone.run(() => {
-            console.log("Hello");
-            this.capturedText = phrases[0];
-            this.cdr.detectChanges();
-          });
-        }
-      });
-  
-      setTimeout(() => {
-        annyang.start();
-      }, 1000); // Start after a 1-second delay (adjust as needed)
-    }
+    // Initialize speech recognition
+    this.recognition = new (window["webkitSpeechRecognition"] || window["SpeechRecognition"])();
+    this.recognition.continuous = true; // Enable continuous recognition
+    this.recognition.lang = 'en-US'; // Set recognition language
+
+    // Event listeners
+    this.recognition.onresult = (event: any) => {
+      // Use type assertion to specify the type of event.results
+      const transcript = (event.results[event.results.length - 1] as SpeechRecognitionResultList)[0].transcript;
+      this.speechResult += transcript;
+    };
+
+    this.recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+    };
   }
 
   startRecording() {
-    if (annyang && !this.isRecording) {
-      this.isRecording = true;
-      annyang.start();
-    }
   }
 
   stopRecording() {
-    if (annyang && this.isRecording) {
-      this.isRecording = false;
-      annyang.abort();
-    }
+   
   }
 }
